@@ -4,6 +4,8 @@ import com.yandex.app.model.Epic;
 import com.yandex.app.model.Status;
 import com.yandex.app.model.Subtask;
 import com.yandex.app.model.Task;
+import com.yandex.app.service.InMemoryTaskManager;
+import com.yandex.app.service.Managers;
 import com.yandex.app.service.TaskManager;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
@@ -11,12 +13,12 @@ import com.yandex.app.service.TaskManager;
 public class Main {
 
     public static void main(String[] args) {
-        TaskManager manager = new TaskManager();
+        TaskManager manager = Managers.getDefault();
 
         // Создание задач
-        Task task1 = new Task(0, "com.yandex.app.model.Task 1", "Description 1", Status.NEW);
-        Task task2 = new Task(0, "com.yandex.app.model.Task 2", "Description 2", Status.NEW);
-        Task task3 = new Task("com.yandex.app.model.Task 3", "Description 3", Status.NEW);
+        Task task1 = new Task( "com.yandex.app.model.Task 1", "Description 1", Status.NEW);
+        Task task2 = new Task( "com.yandex.app.model.Task 2", "Description 2", Status.NEW);
+
         manager.createTask(task1);
         manager.createTask(task2);
 
@@ -59,6 +61,12 @@ public class Main {
         System.out.println(manager.getAllSubtasks());
         System.out.println("Все эпики:");
         System.out.println(manager.getAllEpics());
+
+        System.out.println("=== Просмотр задач ===");
+        System.out.println(manager.getTaskById(task1.getId()));
+        System.out.println(manager.getEpicById(epic1.getId()));
+        System.out.println(manager.getSubtaskById(subtask1.getId()));
+
     }
 
 }
