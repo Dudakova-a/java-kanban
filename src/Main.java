@@ -6,7 +6,7 @@ public class Main {
         TaskManager manager = new TaskManager();
 
         // Создание задач
-        Task task1 = new Task(0, "Task 1", "Description 1", Status.NEW);
+        Task task1 = new Task("Task 1", "Description 1", Status.NEW);
         Task task2 = new Task(0, "Task 2", "Description 2", Status.NEW);
         manager.createTask(task1);
         manager.createTask(task2);
