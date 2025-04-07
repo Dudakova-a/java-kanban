@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class InMemoryHistoryManager implements HistoryManager{
-    private final LinkedList<Task> history = new LinkedList<>(); // Для хранения истории просмотров
+    private final List<Task> history = new LinkedList<>(); // Для хранения истории просмотров
     private static final int MAX_HISTORY_SIZE = 10; // Максимальный размер истории просмотров
 
     /*

@@ -31,19 +31,19 @@ public class InMemoryTaskManager implements TaskManager {
 
     // Геттер для получения списка всех задач
     @Override
-    public Collection<Task> getAllTasks() {
+    public List<Task> getAllTasks() {
         return new ArrayList<>(tasks.values());
     }
 
     // Геттер для получения списка всех подзадач
     @Override
-    public Collection<Task> getAllSubtasks() {
+    public List<Task> getAllSubtasks() {
         return new ArrayList<>(subtasks.values());
     }
 
     // Геттер для получения списка всех эпиков
     @Override
-    public Collection<Task> getAllEpics() {
+    public List<Task> getAllEpics() {
         return new ArrayList<>(epics.values());
     }
 
@@ -77,9 +77,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task getTaskById(int id) {
         Task task = tasks.get(id);
-        if (task != null) {
-            historyManager.add(task);
-        }
+        historyManager.add(task);
         return task;
     }
 
