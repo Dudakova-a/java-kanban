@@ -209,6 +209,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteTask(int taskId) {
         subtasks.remove(taskId);  // Пример
     }
+
     @Override
     public void deleteSubtask(int subTaskId) {
         subtasks.remove(subTaskId);  // Пример
