@@ -10,7 +10,7 @@ class ManagersTest {
         TaskManager manager = Managers.getDefault();
         assertNotNull(manager, "Менеджер не должен быть null");
         // Проверяем что это TaskManager, а не конкретную реализацию
-        assertTrue(manager instanceof TaskManager, "Должен возвращаться объект, реализующий TaskManager");
+        assertEquals(manager instanceof TaskManager, true, "Должен возвращаться объект, реализующий TaskManager");
     }
 
     @Test

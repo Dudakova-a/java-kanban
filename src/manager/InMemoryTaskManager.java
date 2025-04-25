@@ -205,6 +205,15 @@ public class InMemoryTaskManager implements TaskManager {
         return result;
     }
 
+    @Override
+    public void deleteTask(int taskId) {
+        subtasks.remove(taskId);  // Пример
+    }
+    @Override
+    public void deleteSubtask(int subTaskId) {
+        subtasks.remove(subTaskId);  // Пример
+    }
+
     // Обновление статуса эпика на основе статусов его подзадач
     private void updateEpicStatus(int epicId) {
         Epic epic = epics.get(epicId); // Получение эпика по идентификатору
