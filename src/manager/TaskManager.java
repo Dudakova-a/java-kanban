@@ -69,8 +69,4 @@ public interface TaskManager {
     // Возвращает список последних 10 просмотренных задач, в порядке из просмотра (от старых к новым)
     List<Task> getHistory();
 
-    void deleteTask(int taskId);
-
-    void deleteSubtask(int subtaskId);
-
 }
