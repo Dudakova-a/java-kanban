@@ -13,13 +13,16 @@ public class Node {
      /* Конструктор узла*/
 
     public Node(Task task, Node prev, Node next) {
+        if (task == null) {
+            throw new IllegalArgumentException("Task не может быть равным нулю");
+        }
         this.task = task;
         this.prev = prev;
         this.next = next;
     }
 
     public Task getTask() {
-        return task;
+        return new Task(task.getId(), task.getName(), task.getDescription(), task.getStatus());
     }
 
     public Node getPrev() {

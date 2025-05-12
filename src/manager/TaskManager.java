@@ -13,10 +13,10 @@ public interface TaskManager {
     Collection<Task> getAllTasks();
 
     // Геттер для получения списка всех подзадач
-    Collection<Task> getAllSubtasks();
+    Collection<Subtask> getAllSubtasks();
 
     // Геттер для получения списка всех эпиков
-    Collection<Task> getAllEpics();
+    Collection<Epic> getAllEpics();
 
     // Метод для удаления всех задач
     void deleteAllTasks();

@@ -9,11 +9,11 @@ import java.util.*;
 
 // Класс для управления задачами
 public class InMemoryTaskManager implements TaskManager {
-    private final Map<Integer, Task> tasks = new HashMap<>(); // Для хранения задач
-    private final Map<Integer, Subtask> subtasks = new HashMap<>(); // Для хранения подзадач
-    private final Map<Integer, Epic> epics = new HashMap<>(); // Для хранения эпиков
+    protected final Map<Integer, Task> tasks = new HashMap<>(); // Для хранения задач
+    protected final Map<Integer, Subtask> subtasks = new HashMap<>(); // Для хранения подзадач
+    protected final Map<Integer, Epic> epics = new HashMap<>(); // Для хранения эпиков
     private int nextId = 1; // Счетчик для генерации идентификаторов
-    private final HistoryManager historyManager = Managers.getDefaultHistory(); // Менеджер истории, получаем через Manager
+    protected final HistoryManager historyManager = Managers.getDefaultHistory(); // Менеджер истории, получаем через Manager
 
     // Метод для генерации нового уникального идентификатора
     private int generateIds() {
@@ -37,13 +37,13 @@ public class InMemoryTaskManager implements TaskManager {
 
     // Геттер для получения списка всех подзадач
     @Override
-    public List<Task> getAllSubtasks() {
+    public List<Subtask> getAllSubtasks() {
         return new ArrayList<>(subtasks.values());
     }
 
     // Геттер для получения списка всех эпиков
     @Override
-    public List<Task> getAllEpics() {
+    public List<Epic> getAllEpics() {
         return new ArrayList<>(epics.values());
     }
 
