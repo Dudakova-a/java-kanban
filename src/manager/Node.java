@@ -10,7 +10,7 @@ public class Node {
     private Node prev;    // Ссылка на предыдущий узел
     private Node next;    // Ссылка на следующий узел
 
-     /* Конструктор узла*/
+    /* Конструктор узла*/
 
     public Node(Task task, Node prev, Node next) {
         if (task == null) {
