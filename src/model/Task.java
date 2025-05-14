@@ -4,10 +4,19 @@ import java.util.Objects;
 
 // Создаем базовый класс для задач
 public class Task {
+    private static int counter = 0;
     private int id; // Уникальный идентификатор задачи
     private String name; // Название задачи
     private String description; // Описание задачи
     private Status status; // Текущий статус задачи
+
+    public Task(String name, String description, Status status) {
+        this.id = ++counter;
+        this.name = Objects.requireNonNull(name, "Имя задачи не может быть null");
+        this.description = Objects.requireNonNull(description, "Описание задачи не может быть null");
+        this.status = Objects.requireNonNull(status, "Статус задачи не может быть null");
+    }
+
 
     // Создаем конструктор для создания задачи
     public Task(int id, String name, String description, Status status) {
@@ -15,6 +24,10 @@ public class Task {
         this.name = name;
         this.description = description;
         this.status = status;
+        this.name = Objects.requireNonNull(name, "Имя задачи не может быть null");
+        this.description = Objects.requireNonNull(description, "Описание задачи не может быть null");
+        this.status = Objects.requireNonNull(status, "Статус задачи не может быть null");
+        if (id > counter) counter = id;
     }
 
     // Создаем геттеры для полей задачи
@@ -32,6 +45,10 @@ public class Task {
 
     public Status getStatus() {
         return status;
+    }
+
+    public TaskType getType() {
+        return TaskType.TASK;
     }
 
     // Создаем сеттеры для полей задачи

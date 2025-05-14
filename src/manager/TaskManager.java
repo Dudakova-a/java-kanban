@@ -4,7 +4,7 @@ import model.Epic;
 import model.Subtask;
 import model.Task;
 
-import java.util.ArrayList;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -13,10 +13,10 @@ public interface TaskManager {
     Collection<Task> getAllTasks();
 
     // Геттер для получения списка всех подзадач
-    Collection<Task> getAllSubtasks();
+    Collection<Subtask> getAllSubtasks();
 
     // Геттер для получения списка всех эпиков
-    Collection<Task> getAllEpics();
+    Collection<Epic> getAllEpics();
 
     // Метод для удаления всех задач
     void deleteAllTasks();
@@ -67,5 +67,6 @@ public interface TaskManager {
     List<Subtask> getSubtasksByEpicId(int epicId);
 
     // Возвращает список последних 10 просмотренных задач, в порядке из просмотра (от старых к новым)
-    List <Task> getHistory();
+    List<Task> getHistory();
+
 }
