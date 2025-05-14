@@ -17,6 +17,27 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     @Override
+    public Task getTaskById(int id) {
+        Task task = super.getTaskById(id);
+        save();
+        return task;
+    }
+
+    @Override
+    public Subtask getSubtaskById(int id) {
+        Subtask subtask = super.getSubtaskById(id);
+        save();
+        return subtask;
+    }
+
+    @Override
+    public Epic getEpicById(int id) {
+        Epic epic = super.getEpicById(id);
+        save();
+        return epic;
+    }
+
+    @Override
     public void createTask(Task task) {
         super.createTask(task);
         save();
@@ -206,10 +227,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     epic.setStatus(status);
                     return epic;
                 case "SUBTASK":
-                    if (parts.length < 6 || parts[5].trim().isEmpty()) {
+                    String epicIdString = parts[5].trim();
+                    if (epicIdString.isEmpty()) {
                         throw new IllegalArgumentException("Для подзадачи отсутствует epicId: " + value);
                     }
-                    int epicId = Integer.parseInt(parts[5].trim());
+                    int epicId = Integer.parseInt(epicIdString);
                     return new Subtask(id, name, description, status, epicId);
                 default:
                     throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
