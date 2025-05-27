@@ -1,4 +1,5 @@
 package manager;
+
 import manager.TaskManager;
 import model.*;
 import org.junit.jupiter.api.*;
@@ -11,7 +12,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class TaskManagerTest<T extends TaskManager> {
     protected T taskManager;
+
     protected abstract T createTaskManager();
+
     protected LocalDateTime startTime;  // Общее время начала для тестов
     protected Duration duration;  // Общая продолжительность для тестов
 

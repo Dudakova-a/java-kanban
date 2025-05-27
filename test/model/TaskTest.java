@@ -1,7 +1,10 @@
 package model;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class TaskTest {

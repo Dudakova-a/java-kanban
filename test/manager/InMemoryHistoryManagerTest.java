@@ -4,7 +4,9 @@ import model.Task;
 import model.Status;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -158,8 +160,6 @@ class InMemoryHistoryManagerTest {
         historyManager.add(null); // Null задача
         assertTrue(historyManager.getHistory().isEmpty(), "История должна игнорировать null");
     }
-
-
 
 
 }
