@@ -19,6 +19,6 @@ class ManagersTest {
         HistoryManager historyManager = Managers.getDefaultHistory();
         assertNotNull(historyManager, "Менеджер истории не должен быть null");
         // Проверяем что это HistoryManager, а не конкретную реализацию
-        assertTrue(historyManager instanceof HistoryManager, "Должен возвращаться объект, реализующий HistoryManager");
+        assertInstanceOf(HistoryManager.class, historyManager, "Должен возвращаться объект, реализующий HistoryManager");
     }
 }

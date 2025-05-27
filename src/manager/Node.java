@@ -22,7 +22,7 @@ public class Node {
     }
 
     public Task getTask() {
-        return new Task(task.getId(), task.getName(), task.getDescription(), task.getStatus());
+        return new Task(task.getId(), task.getName(), task.getDescription(), task.getStatus(), task.getStartTime(), task.getDuration());
     }
 
     public Node getPrev() {
