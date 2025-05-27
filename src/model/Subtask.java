@@ -1,12 +1,26 @@
 package model;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 // Создаем класс для подзадач, наследуем от model.Task
 public class Subtask extends Task {
-    private int epicId; // Индентификатор для эпика, к которому принадлежит задача
+    // Индентификатор для эпика, к которому принадлежит задача
+    private final int epicId;
 
     // Конструктор для создания подзадачи
-    public Subtask(int id, String name, String description, Status status, int epicId) {
-        super(id, name, description, status); // Вызываем конструктор родительского класса
+    public Subtask(int id, String name, String description, Status status, LocalDateTime startTime, Duration duration, int epicId) {
+        super(id, name, description, status, startTime, duration); // Вызываем конструктор родительского класса
+        if (epicId <= 0)
+            throw new IllegalArgumentException("ID эпика должно быть положительным");
+
+        this.epicId = epicId;
+
+    }
+
+    public Subtask(String name, String description, Status status, LocalDateTime startTime, Duration duration, int epicId) {
+        super(name, description, status, startTime, duration);
+        if (epicId <= 0) throw new IllegalArgumentException("ID эпика должно быть положительным");
         this.epicId = epicId;
     }
 
@@ -23,7 +37,7 @@ public class Subtask extends Task {
                 ", name='" + getName() + '\'' +
                 ", description='" + getDescription() + '\'' +
                 ", status=" + getStatus() +
-                "epicId=" + epicId +
+                ", epicId=" + epicId +
                 '}';
     }
 }

@@ -1,5 +1,7 @@
 package manager;
 
+import java.io.File;
+
 public final class Managers {
     // Создадим приватным конструктор для избежания создания экземпляра класса и наследования
     private Managers() {
@@ -7,7 +9,7 @@ public final class Managers {
 
     // Метод возвращает реализацию TaskManager по умолчанию
     public static TaskManager getDefault() {
-        return new InMemoryTaskManager();
+        return new FileBackedTaskManager(new File("tasks.csv"));
     }
 
     // Метод возвращает реализацию HistoryManager по умолчанию
