@@ -7,58 +7,73 @@ import model.Task;
 import java.util.Collection;
 import java.util.List;
 
+import java.util.Set;
+
 public interface TaskManager {
-    // Получение списков всех задач
+    // Геттер для получения списка всех задач
     Collection<Task> getAllTasks();
 
-    Collection<Subtask> getAllSubtasks();
+    // Геттер для получения списка всех подзадач
+    Collection<Task> getAllSubtasks();
 
-    Collection<Epic> getAllEpics();
+    // Геттер для получения списка всех эпиков
+    Collection<Task> getAllEpics();
 
-    // Удаление всех задач
+    // Метод для удаления всех задач
     void deleteAllTasks();
 
+    //Метод для удаления всех подзадач
     void deleteAllSubtasks();
 
+    //Метод для очистки списка эпиков
     void deleteAllEpics();
 
-    // Получение задач по ID
+    // Получение задачи по идентификатору
     Task getTaskById(int id);
 
+    // Получение подзадачи по идентификатору
     Subtask getSubtaskById(int id);
 
+    // Получение эпика по идентификатору
     Epic getEpicById(int id);
 
-    // Создание задач
-    Task createTask(Task task) throws TimeOverlapException;
+    // Создание задачи
+    int createTask(Task task);
 
-    Subtask createSubtask(Subtask subtask) throws TimeOverlapException;
+    // Создание подзадачи
+    int createSubtask(Subtask subtask);
 
-    Epic createEpic(Epic epic);
+    // Создание эпика
+    int createEpic(Epic epic);
 
-    // Обновление задач
-    void updateTask(Task task) throws TimeOverlapException;
+    // Обновление задачи
+    void updateTask(Task task);
 
-    void updateSubtask(Subtask subtask) throws TimeOverlapException;
+    // Обновление подзадачи
+    void updateSubtask(Subtask subtask);
 
+    // Обновление эпика
     void updateEpic(Epic epic);
 
-    // Удаление задач по ID
+    // Удаление задачи по идентификатору
     void deleteTaskById(int id);
 
+    // Удаление подзадачи по идентификатору
     void deleteSubtaskById(int id);
 
+    // Удаление эпика по идентификатору
     void deleteEpicById(int id);
 
-    // Получение подзадач эпика
-    List<Subtask> getEpicSubtasks(int epicId);
+    // Получение списка подзадач определённого эпика
+    List<Subtask> getSubtasksByEpicId(int epicId);
 
-    // История просмотров
+    // Возвращает список последних 10 просмотренных задач, в порядке из просмотра (от старых к новым)
     List<Task> getHistory();
 
-    // Приоритизированный список
-    List<Task> getPrioritizedTasks();
+    // Новые методы для работы со временем
+    Set<Task> getPrioritizedTasks();
 
-    // Проверка пересечений по времени
-    boolean hasTimeOverlap(Task taskToCheck);
+    boolean isTasksOverlap(Task task1, Task task2);
+
+    boolean hasTaskOverlaps(Task newTask);
 }

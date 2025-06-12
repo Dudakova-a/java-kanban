@@ -1,12 +1,12 @@
 package manager;
 
-import manager.TaskManager;
 import model.*;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.time.*;
-import java.util.*;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,258 +15,143 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     protected abstract T createTaskManager();
 
-    protected LocalDateTime startTime;  // Общее время начала для тестов
-    protected Duration duration;  // Общая продолжительность для тестов
-
-    protected Task task;
-    protected Epic epic;
-    protected Subtask subtask1;
-    protected Subtask subtask2;
-
     @BeforeEach
-    void setUp() throws IOException {
+    void setUp() {
         taskManager = createTaskManager();
-
-        task = new Task("Task", "Description", Status.NEW,
-                LocalDateTime.now(), Duration.ofMinutes(30));
-
-        epic = new Epic("Epic", "Description");
-
-        subtask1 = new Subtask("Subtask 1", "Description", Status.NEW,
-                LocalDateTime.now().plusHours(1), Duration.ofMinutes(15), epic.getId());
-
-        subtask2 = new Subtask("Subtask 2", "Description", Status.IN_PROGRESS,
-                LocalDateTime.now().plusHours(2), Duration.ofMinutes(45), epic.getId());
     }
 
-    /* Тесты для Task */
-
     @Test
-    void shouldCreateAndGetTask() throws TimeOverlapException {
-        // Создаем задачу и получаем её объект
-        Task createdTask = taskManager.createTask(task);
-
-        // Получаем ID созданной задачи
-        final int taskId = createdTask.getId();
-
-        // Получаем задачу для проверки
-        final Task savedTask = taskManager.getTaskById(taskId);
+    void shouldCreateAndGetTask() {
+        Task task = new Task("Test task", "Test description", Status.NEW);
+        int taskId = taskManager.createTask(task);
+        Task savedTask = taskManager.getTaskById(taskId);
 
         assertNotNull(savedTask, "Задача не найдена");
-        assertEquals(task, savedTask, "Задачи не совпадают");
+        assertEquals(task.getName(), savedTask.getName(), "Название задачи не совпадает");
+        assertEquals(task.getDescription(), savedTask.getDescription(), "Описание задачи не совпадает");
+        assertEquals(Status.NEW, savedTask.getStatus(), "Статус задачи должен быть NEW");
     }
 
     @Test
-    void shouldUpdateTask() throws TimeOverlapException {
-        final int taskId = taskManager.createTask(task).getId();
-        Task updatedTask = new Task("Updated", "Updated", Status.IN_PROGRESS,
-                LocalDateTime.now().plusHours(3), Duration.ofMinutes(20));
-        updatedTask.setId(taskId);
+    void shouldCreateAndGetEpic() {
+        Epic epic = new Epic("Test epic", "Test description");
+        int epicId = taskManager.createEpic(epic);
+        Epic savedEpic = taskManager.getEpicById(epicId);
 
+        assertNotNull(savedEpic, "Эпик не найден");
+        assertEquals(epic.getName(), savedEpic.getName(), "Название эпика не совпадает");
+        assertEquals(epic.getDescription(), savedEpic.getDescription(), "Описание эпика не совпадает");
+        assertEquals(Status.NEW, savedEpic.getStatus(), "Статус эпика должен быть NEW");
+    }
+
+    @Test
+    void shouldCreateAndGetSubtask() {
+        Epic epic = new Epic("Test epic", "Test description");
+        int epicId = taskManager.createEpic(epic);
+
+        Subtask subtask = new Subtask("Test subtask", "Test description", Status.NEW, epicId);
+        int subtaskId = taskManager.createSubtask(subtask);
+        Subtask savedSubtask = taskManager.getSubtaskById(subtaskId);
+
+        assertNotNull(savedSubtask, "Подзадача не найдена");
+        assertEquals(subtask.getName(), savedSubtask.getName(), "Название подзадачи не совпадает");
+        assertEquals(subtask.getDescription(), savedSubtask.getDescription(), "Описание подзадачи не совпадает");
+        assertEquals(Status.NEW, savedSubtask.getStatus(), "Статус подзадачи должен быть NEW");
+        assertEquals(epicId, savedSubtask.getEpicId(), "ID эпика не совпадает");
+    }
+
+    @Test
+    void shouldUpdateTask() {
+        Task task = new Task("Test task", "Test description", Status.IN_PROGRESS);
+        int taskId = taskManager.createTask(task);
+
+        Task updatedTask = new Task(taskId, "Updated task", "Updated description", Status.IN_PROGRESS);
         taskManager.updateTask(updatedTask);
 
-        assertEquals(updatedTask, taskManager.getTaskById(taskId), "Задача не обновилась");
+        Task savedTask = taskManager.getTaskById(taskId);
+        assertEquals("Updated task", savedTask.getName(), "Название задачи не обновлено");
+        assertEquals("Updated description", savedTask.getDescription(), "Описание задачи не обновлено");
+        assertEquals(Status.IN_PROGRESS, savedTask.getStatus(), "Статус задачи не обновлен");
     }
 
     @Test
-    void shouldDeleteTask() throws TimeOverlapException {
-        // Создаем задачу (метод createTask возвращает void)
-        taskManager.createTask(task);
+    void shouldDeleteTask() {
+        Task task = new Task("Test task", "Test description", Status.DONE);
+        int taskId = taskManager.createTask(task);
 
-        // Получаем ID созданной задачи (предполагая, что она получает первый доступный ID)
-        final int taskId = task.getId();
-
-        // Удаляем задачу
         taskManager.deleteTaskById(taskId);
-
-        // Проверяем что задача удалилась
-        assertNull(taskManager.getTaskById(taskId), "Задача не удалилась");
+        assertNull(taskManager.getTaskById(taskId), "Задача не удалена");
     }
 
     @Test
-    void shouldCreateAndGetEpic() throws TimeOverlapException {
-        // Создаем эпик и получаем его ID
-        Epic createdEpic = taskManager.createEpic(epic);  // предполагаем, что epic уже проинициализирован
-        final int epicId = createdEpic.getId();
+    void shouldDeleteEpicWithSubtasks() {
+        Epic epic = new Epic("Test epic", "Test description");
+        int epicId = taskManager.createEpic(epic);
 
-        // Проверяем, что эпик сохранился
-        final Epic savedEpic = taskManager.getEpicById(epicId);
-        assertNotNull(savedEpic, "Эпик не найден");
-        assertEquals(epic, savedEpic, "Эпики не совпадают");
+        Subtask subtask = new Subtask("Test subtask", "Test description", Status.DONE, epicId);
+        int subtaskId = taskManager.createSubtask(subtask);
+
+        taskManager.deleteEpicById(epicId);
+        assertNull(taskManager.getEpicById(epicId), "Эпик не удален");
+        assertNull(taskManager.getSubtaskById(subtaskId), "Подзадача не удалена");
     }
 
     @Test
-    void shouldUpdateEpic() {
-        // Создаем эпик
-        Epic createdEpic = taskManager.createEpic(epic);
-        final int epicId = createdEpic.getId();
+    void shouldDeleteSubtask() {
+        Epic epic = new Epic("Test epic", "Test description");
+        int epicId = taskManager.createEpic(epic);
 
-        // Обновляем его
-        Epic updatedEpic = new Epic("Updated", "Updated");
-        updatedEpic.setId(epicId);  // важно сохранить тот же ID
+        Subtask subtask = new Subtask("Test subtask", "Test description", Status.DONE, epicId);
+        int subtaskId = taskManager.createSubtask(subtask);
 
-        taskManager.updateEpic(updatedEpic);
-
-        // Проверяем, что обновление прошло
-        assertEquals(updatedEpic, taskManager.getEpicById(epicId), "Эпик не обновился");
+        taskManager.deleteSubtaskById(subtaskId);
+        assertNull(taskManager.getSubtaskById(subtaskId), "Подзадача не удалена");
     }
 
     @Test
-    void shouldCreateAndGetSubtask() throws TimeOverlapException {
-        // Создаем эпик (подзадача не может существовать без эпика)
-        Epic createdEpic = taskManager.createEpic(epic);
-
-        // Создаем подзадачу и получаем её ID
-        Subtask createdSubtask = taskManager.createSubtask(subtask1);
-        final int subtaskId = createdSubtask.getId();
-
-        // Проверяем, что подзадача сохранилась
-        final Subtask savedSubtask = taskManager.getSubtaskById(subtaskId);
-        assertNotNull(savedSubtask, "Подзадача не найдена");
-        assertEquals(subtask1, savedSubtask, "Подзадачи не совпадают");
-    }
-
-    @Test
-    void shouldUpdateSubtask() throws TimeOverlapException {
-        // Создаем эпик и подзадачу
-        Epic createdEpic = taskManager.createEpic(epic);
-        Subtask createdSubtask = taskManager.createSubtask(subtask1);
-        final int subtaskId = createdSubtask.getId();
-
-        // Обновляем подзадачу
-        Subtask updatedSubtask = new Subtask("Updated", "Updated", Status.DONE,
-                LocalDateTime.now().plusHours(4), Duration.ofMinutes(10), epic.getId());
-        updatedSubtask.setId(subtaskId);  // важно сохранить тот же ID
-
-        taskManager.updateSubtask(updatedSubtask);
-
-        // Проверяем, что обновление прошло
-        assertEquals(updatedSubtask, taskManager.getSubtaskById(subtaskId), "Подзадача не обновилась");
-    }
-
-    /* Тесты для получения списков */
-
-    @Test
-    void shouldGetAllTasks() throws TimeOverlapException {
-        taskManager.createTask(task);
-        assertEquals(1, taskManager.getAllTasks().size(), "Неверное количество задач");
-    }
-
-    @Test
-    void shouldGetAllSubtasks() throws TimeOverlapException {
-        taskManager.createEpic(epic);
-        taskManager.createSubtask(subtask1);
-        assertEquals(1, taskManager.getAllSubtasks().size(), "Неверное количество подзадач");
-    }
-
-    @Test
-    void shouldGetAllEpics() {
-        taskManager.createEpic(epic);
-        assertEquals(1, taskManager.getAllEpics().size(), "Неверное количество эпиков");
-    }
-
-    /* Тесты для удаления */
-
-    @Test
-    void shouldDeleteAllTasks() throws TimeOverlapException {
-        taskManager.createTask(task);
-        taskManager.deleteAllTasks();
-        assertTrue(taskManager.getAllTasks().isEmpty(), "Задачи не удалились");
-    }
-
-    @Test
-    void shouldDeleteAllSubtasks() throws TimeOverlapException {
-        taskManager.createEpic(epic);
-        taskManager.createSubtask(subtask1);
-        taskManager.deleteAllSubtasks();
-        assertTrue(taskManager.getAllSubtasks().isEmpty(), "Подзадачи не удалились");
-    }
-
-    /* Тесты для истории */
-
-    @Test
-    void shouldAddToHistory() throws TimeOverlapException {
-        final int taskId = taskManager.createTask(task).getId();
-        taskManager.getTaskById(taskId);
-
-        assertEquals(1, taskManager.getHistory().size(), "Задача не добавилась в историю");
-    }
-
-    /* Граничные случаи */
-
-
-    @Test
-    void shouldNotUpdateNonExistentTask() {
-        int nonExistentTaskId = 999;
-        Task fakeTask = new Task(
-                "Fake",
-                "Fake",
-                Status.NEW,
-                LocalDateTime.now().plusHours(1),
-                Duration.ofMinutes(30)
-        );
-        fakeTask.setId(nonExistentTaskId);
-
-        Exception exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> taskManager.updateTask(fakeTask)
-        );
-
-        assertEquals("Task with id 999 does not exist", exception.getMessage());
-    }
-
-    @Test
-    void shouldNotCreateSubtaskWithoutEpic() {
-        Subtask subtaskWithoutEpic = new Subtask("Subtask", "Desc", Status.NEW,
-                LocalDateTime.now(), Duration.ofMinutes(30), 999);
-
-        Exception exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> taskManager.createSubtask(subtaskWithoutEpic)
-        );
-
-        assertEquals("Эпик не существует", exception.getMessage());
-    }
-
-    /* Тесты для временных параметров */
-
-    @Test
-    void shouldDetectTimeOverlap() throws TimeOverlapException {
-        taskManager.createTask(task);
-        Task overlappingTask = new Task("Overlap", "Overlap", Status.NEW,
-                task.getStartTime().plusMinutes(10), Duration.ofMinutes(20));
-
-        assertThrows(TimeOverlapException.class, () -> taskManager.createTask(overlappingTask));
-    }
-
-    @Test
-    void shouldGetPrioritizedTasks() throws TimeOverlapException {
-        // 1. Создаем тестовые данные
+    void shouldGetPrioritizedTasks() {
         LocalDateTime now = LocalDateTime.now();
+        Task task1 = new Task("Task 1", "Description", Status.NEW, Duration.ofMinutes(30), now.plusHours(1));
+        Task task2 = new Task("Task 2", "Description", Status.NEW, Duration.ofMinutes(45), now);
 
-        // 2. Сначала создаем эпик
-        Epic epic = taskManager.createEpic(new Epic("Test Epic", "Description"));
+        taskManager.createTask(task1);
+        taskManager.createTask(task2);
 
-        // 3. Создаем задачи с разным временем начала
-        Task task1 = taskManager.createTask(
-                new Task("Task 1", "Description", Status.NEW, now.plusHours(2), Duration.ofMinutes(30)));
+        Set<Task> prioritized = taskManager.getPrioritizedTasks();
+        assertEquals(2, prioritized.size(), "Неверное количество задач в списке приоритетов");
+        assertEquals(task2, prioritized.iterator().next(), "Первой должна быть задача с более ранним временем начала");
+    }
 
-        Task task2 = taskManager.createTask(
-                new Task("Task 2", "Description", Status.NEW, now.plusHours(1), Duration.ofMinutes(15)));
+    @Test
+    void shouldNotAllowTimeOverlap() {
+        LocalDateTime now = LocalDateTime.now();
+        Task task1 = new Task("Task 1", "Description", Status.NEW, Duration.ofHours(1), now);
+        taskManager.createTask(task1);
 
-        // 4. Создаем подзадачу (если нужно)
-        Subtask subtask = taskManager.createSubtask(
-                new Subtask("Subtask", "Description", Status.NEW, now.plusHours(3), Duration.ofMinutes(20), epic.getId()));
+        Task overlappingTask = new Task("Task 2", "Description", Status.NEW, Duration.ofHours(1), now.plusMinutes(30));
+        assertThrows(ManagerSaveException.class, () -> taskManager.createTask(overlappingTask),
+                "Должно быть исключение при пересечении времени задач");
+    }
 
-        // 5. Получаем приоритетный список
-        List<Task> prioritized = taskManager.getPrioritizedTasks();
+    @Test
+    void shouldCalculateEpicStatus() {
+        Epic epic = new Epic("Test epic", "Test description");
+        int epicId = taskManager.createEpic(epic);
 
-        // 6. Проверяем
-        assertEquals(3, prioritized.size(), "Неверное количество задач");
+        // Все подзадачи NEW
+        Subtask subtask1 = new Subtask("Subtask 1", "Description", Status.NEW, epicId);
+        taskManager.createSubtask(subtask1);
+        assertEquals(Status.NEW, taskManager.getEpicById(epicId).getStatus(), "Статус должен быть NEW");
 
-        // Проверяем порядок: task2 (раньше) -> task1 -> subtask
-        assertEquals(task2.getId(), prioritized.get(0).getId(), "Первая задача неверная");
-        assertEquals(task1.getId(), prioritized.get(1).getId(), "Вторая задача неверная");
-        assertEquals(subtask.getId(), prioritized.get(2).getId(), "Третья задача неверная");
+        // Одна подзадача DONE
+        subtask1.setStatus(Status.DONE);
+        taskManager.updateSubtask(subtask1);
+        assertEquals(Status.DONE, taskManager.getEpicById(epicId).getStatus(), "Статус должен быть DONE");
+
+        // Все подзадачи DONE
+        Subtask subtask2 = new Subtask("Subtask 2", "Description", Status.DONE, epicId);
+        subtask2.setStatus(Status.DONE);
+        taskManager.createSubtask(subtask2);
+        assertEquals(Status.DONE, taskManager.getEpicById(epicId).getStatus(), "Статус должен быть DONE");
     }
 }

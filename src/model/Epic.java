@@ -1,74 +1,71 @@
 package model;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
-public class Epic extends Task {
-    private final List<Integer> subtaskIds = new ArrayList<>();
-    private transient List<Subtask> subtasks;
+import manager.TaskManager;
 
-    public Epic(int id, String name, String description, Status status,
-                LocalDateTime startTime, Duration duration) {
-        super(id, name, description, status, startTime, duration);
+// Класс для эпиков, наследуем от model.Task
+public class Epic extends Task {
+    private final List<Integer> subtaskIds; // Список ids для подзадач входящих в эпик
+    private LocalDateTime endTime;
+
+    // Конструктор для создания эпика
+    public Epic(int id, String name, String description) {
+        super(id, name, description, Status.NEW); // Эпик всегда создается со статусом NEW
+        this.subtaskIds = new ArrayList<>();// Инициализируем список подзадач
     }
 
     public Epic(String name, String description) {
-        super(1, name, description, Status.NEW, null, null); // 0 как маркер до присвоения ID
+        super(name, description, Status.NEW);
+        this.subtaskIds = new ArrayList<>();
     }
 
-    public void setSubtasks(List<Subtask> subtasks) {
-        this.subtasks = subtasks;
-    }
-
+    // Геттер для списка идентификаторов подзадач
     public List<Integer> getSubtaskIds() {
-        return new ArrayList<>(subtaskIds);
+        return subtaskIds;
     }
 
-    public void addSubtaskId(int subtaskId) {
-        if (subtaskId <= 0) {
-            throw new IllegalArgumentException("ID подзадачи должно быть положительным");
+    // Метод для добавления индентификатора подзадачи в эпик
+    public void addSubtaskId(int subtaskID) {
+        if (subtaskID <= 0) {
+            throw new IllegalArgumentException("ID подзадачи должен быть положительным числом");
         }
-        if (!subtaskIds.contains(subtaskId)) {
-            subtaskIds.add(subtaskId);
-        }
+        subtaskIds.add(subtaskID);
     }
 
-    public void removeSubtaskId(int subtaskId) {
-        subtaskIds.remove((Integer) subtaskId);
+    // Метод для удаления индентификатора подзадачи из эпика
+    public void removeSubtaskId(int subtaskID) {
+        subtaskIds.remove((Integer) subtaskID); // Удаляем по значению
     }
 
-    @Override
-    public Duration getDuration() {
-        if (subtasks == null || subtasks.isEmpty()) {
-            return super.getDuration() != null ? super.getDuration() : Duration.ZERO;
+    public void updateEpicFields(TaskManager taskManager) {
+        if (subtaskIds.isEmpty()) {
+            this.startTime = null;
+            this.duration = Duration.ZERO;
+            this.endTime = null;
         }
-        return subtasks.stream()
-                .map(Subtask::getDuration)
-                .filter(Objects::nonNull)
-                .reduce(Duration.ZERO, Duration::plus);
-    }
 
-    @Override
-    public LocalDateTime getStartTime() {
-        if (subtasks == null || subtasks.isEmpty()) {
-            return super.getStartTime();
-        }
-        return subtasks.stream()
+        List<Subtask> subtasks = taskManager.getSubtasksByEpicId(this.getId());
+
+        // Обновление времени начала (самая ранняя подзадача)
+        this.startTime = subtasks.stream()
                 .map(Subtask::getStartTime)
                 .filter(Objects::nonNull)
                 .min(LocalDateTime::compareTo)
                 .orElse(null);
-    }
 
-    @Override
-    public LocalDateTime getEndTime() {
-        if (subtasks == null || subtasks.isEmpty()) {
-            return super.getEndTime();
-        }
-        return subtasks.stream()
+        // Обновление продолжительности (сумма подзадач)
+        this.duration = subtasks.stream()
+                .map(Subtask::getDuration)
+                .filter(Objects::nonNull)
+                .reduce(Duration.ZERO, Duration::plus);
+
+        // Обновление времени окончания (самая поздняя подзадача)
+        this.endTime = subtasks.stream()
                 .map(Subtask::getEndTime)
                 .filter(Objects::nonNull)
                 .max(LocalDateTime::compareTo)
@@ -76,15 +73,36 @@ public class Epic extends Task {
     }
 
     @Override
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+
+    // Переопределяем метод toString для удобного вывода информации об эпике
+    @Override
     public String toString() {
         return "Epic{" +
-                "id=" + getId() +
-                ", name='" + getName() + '\'' +
-                ", description='" + getDescription() + '\'' +
-                ", status=" + getStatus() +
-                ", startTime=" + getStartTime() +
-                ", duration=" + (getDuration() != null ? getDuration().toMinutes() + "m" : "null") +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", status=" + status +
                 ", subtaskIds=" + subtaskIds +
+                ", duration=" + duration +
+                ", startTime=" + startTime +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        Epic epic = (Epic) o;
+        return Objects.equals(subtaskIds, epic.subtaskIds);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), subtaskIds);
     }
 }

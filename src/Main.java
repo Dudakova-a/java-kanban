@@ -1,128 +1,140 @@
-import manager.FileBackedTaskManager;
+import manager.*;
 import manager.TaskManager;
+
 import model.Epic;
 import model.Status;
 import model.Subtask;
 import model.Task;
 
 import java.io.File;
-import java.time.Duration;
-import java.time.LocalDateTime;
+import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) {
-        File storageFile = new File("tasks.csv");
-        TaskManager manager = null;
+        // Тестирование InMemoryTaskManager
+        testInMemoryTaskManager();
 
-        try {
-            if (storageFile.exists()) {
-                System.out.println("Загружаем задачи из файла...");
-                manager = FileBackedTaskManager.loadFromFile(storageFile);
-            } else {
-                System.out.println("Создаем новый файл хранилища...");
-                manager = new FileBackedTaskManager(storageFile);
-            }
-
-            if (manager == null) {
-                throw new IllegalStateException("Не удалось инициализировать менеджер задач");
-            }
-
-            testTaskOperations(manager);
-            testTimeFunctionality(manager);
-
-        } catch (Exception e) {
-            System.err.println("Произошла ошибка: " + e.getMessage());
-            e.printStackTrace();
-        }
+        // Тестирование FileBackedTaskManager
+        testFileBackedTaskManager();
     }
 
-    private static void testTaskOperations(TaskManager manager) {
-        System.out.println("\n=== Тестирование базовых операций ===");
+    private static void testInMemoryTaskManager() {
+        System.out.println("*** Тестирование InMemoryTaskManager ***");
+        TaskManager manager = Managers.getDefault();
 
-        // Создание задач с временными параметрами
-        Task task1 = new Task("Task 1", "Description 1", Status.NEW,
-                LocalDateTime.of(2023, 1, 1, 10, 0), Duration.ofHours(2));
-        Task task2 = new Task("Task 2", "Description 2", Status.NEW,
-                LocalDateTime.of(2023, 1, 1, 13, 0), Duration.ofHours(1));
+        // Создаем тестовые данные
+        Task task1 = new Task("Task 1", "Description 1", Status.NEW);
+        Task task2 = new Task("Task 2", "Description 2", Status.NEW);
+        manager.createTask(task1);
+        manager.createTask(task2);
+
+        Epic epic1 = new Epic("Epic 1", "Description Epic 1");
+        int epicId = manager.createEpic(epic1);
+
+        Subtask subtask1 = new Subtask("Subtask 1", "Description Subtask 1",
+                Status.NEW, epicId);
+        Subtask subtask2 = new Subtask("Subtask 2", "Description Subtask 2",
+                Status.IN_PROGRESS, epicId);
+        manager.createSubtask(subtask1);
+        manager.createSubtask(subtask2);
+
+        // Тестируем историю просмотров
+        System.out.println("\nТестирование истории просмотров:");
+        manager.getTaskById(task1.getId());
+        manager.getEpicById(epicId);
+        manager.getSubtaskById(subtask1.getId());
+        printHistory(manager);
+
+        // Тестируем удаление
+        System.out.println("\nПосле удаления задачи " + task1.getId() + ":");
+        manager.deleteTaskById(task1.getId());
+        printHistory(manager);
+    }
+
+    private static void testFileBackedTaskManager() {
+        System.out.println("\n*** Тестирование FileBackedTaskManager ***");
 
         try {
-            manager.createTask(task1);
-            manager.createTask(task2);
-            System.out.println("Задачи успешно созданы");
-        } catch (Exception e) {
+            // Создаем временный файл
+            File file = File.createTempFile("tasks", ".csv");
+            System.out.println("Используем временный файл: " + file.getAbsolutePath());
+
+            // Создаем и заполняем менеджер
+            FileBackedTaskManager manager = new FileBackedTaskManager(file);
+
+            // 1. Сначала создаем эпик и получаем его ID
+            Epic epic = new Epic("Epic", "Description");
+            int epicId = manager.createEpic(epic);
+            System.out.println("Создан эпик с ID: " + epicId);
+
+            // 2. Проверяем, что ID эпика валиден
+            if (epicId <= 0) {
+                throw new IllegalStateException("Неверный ID эпика: " + epicId);
+            }
+
+            // 3. Создаем подзадачу с корректным ID эпика
+            Subtask subtask = new Subtask(
+                    "Subtask",
+                    "Description",
+                    Status.NEW,
+                    epicId  // Используем полученный ID эпика
+            );
+            int subtaskId = manager.createSubtask(subtask);
+            System.out.println("Создана подзадача с ID: " + subtaskId);
+
+            // 4. Проверяем сохранение/загрузку
+            FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
+            System.out.println("\nЗагруженные данные:");
+            printAllTasks(loadedManager);
+
+        } catch (IOException e) {
+            System.out.println("Ошибка при работе с файлом: " + e.getMessage());
+        } catch (IllegalStateException e) {
             System.out.println("Ошибка создания задач: " + e.getMessage());
         }
-
-        // Создание эпика с подзадачами
-        Epic epic1 = new Epic("Epic 1", "Description Epic 1");
-        manager.createEpic(epic1);
-        System.out.println("Создан эпик с ID: " + epic1.getId());
-        // Убедимся, что ID эпика установлен правильно
-        if (epic1.getId() <= 0) {
-            throw new IllegalStateException("Эпик получил невалидный ID: " + epic1.getId());
-        }
-
-        Subtask subtask1 = new Subtask("Subtask 1", "Description Subtask 1", Status.NEW,
-                LocalDateTime.of(2023, 1, 2, 9, 0), Duration.ofHours(3), epic1.getId());
-        Subtask subtask2 = new Subtask("Subtask 2", "Description Subtask 2", Status.IN_PROGRESS,
-                LocalDateTime.of(2023, 1, 2, 13, 0), Duration.ofHours(2), epic1.getId());
-
-        try {
-            manager.createSubtask(subtask1);
-            manager.createSubtask(subtask2);
-            System.out.println("Подзадачи успешно созданы");
-        } catch (Exception e) {
-            System.out.println("Ошибка создания подзадач: " + e.getMessage());
-        }
-
-        // Тестирование пересечения времени
-        System.out.println("\nПроверка пересечения времени:");
-        Task overlappingTask = new Task("Overlapping Task", "Should fail", Status.NEW,
-                LocalDateTime.of(2023, 1, 1, 11, 30), Duration.ofHours(1));
-
-        try {
-            manager.createTask(overlappingTask);
-            System.out.println("ОШИБКА: Задача с пересекающимся временем была создана");
-        } catch (Exception e) {
-            System.out.println("УСПЕХ: " + e.getMessage());
-        }
     }
 
-    private static void testTimeFunctionality(TaskManager manager) {
-        System.out.println("\n=== Тестирование временных параметров ===");
-
-        // Вывод приоритетного списка задач
-        System.out.println("Приоритетный список задач:");
-        manager.getPrioritizedTasks().forEach(task -> {
-            System.out.printf("%s: %s - %s (Длительность: %d мин)%n",
-                    task.getClass().getSimpleName(),
-                    task.getStartTime(),
-                    task.getEndTime(),
-                    task.getDuration().toMinutes());
-        });
-
-        // Проверка временных параметров эпика
-        Epic epic = (Epic) manager.getEpicById(3); // Предполагая, что epic1 имеет ID=3
-        System.out.println("\nВременные параметры эпика:");
-        System.out.println("Начало: " + epic.getStartTime());
-        System.out.println("Окончание: " + epic.getEndTime());
-        System.out.println("Длительность: " + epic.getDuration().toMinutes() + " мин");
-    }
-
-    private static void testHistory(TaskManager manager) {
-        System.out.println("\n=== Тестирование истории просмотров ===");
-
-        // Получаем задачи для просмотра
-        manager.getTaskById(1);
-        manager.getEpicById(3);
-        manager.getSubtaskById(4);
-
+    private static void printHistory(TaskManager manager) {
         System.out.println("История просмотров:");
-        manager.getHistory().forEach(task -> {
-            String type = task instanceof Epic ? "Epic" :
-                    task instanceof Subtask ? "Subtask" : "Task";
-            System.out.printf("[%s] %s (ID: %d)%n", type, task.getName(), task.getId());
+        for (Task task : manager.getHistory()) {
+            // Чёткое разделение типов задач при выводе
+            if (task instanceof Epic) {
+                System.out.println("[Epic] " + task);
+            } else if (task instanceof Subtask) {
+                System.out.println("[Subtask] " + task);
+            } else {
+                System.out.println("[Task] " + task);
+            }
+        }
+    }
+
+    private static void printAllTasks(TaskManager manager) {
+        System.out.println("Обычные задачи:");
+        manager.getAllTasks().forEach(t -> System.out.println("  " + t));
+
+        System.out.println("\nЭпики:");
+        manager.getAllEpics().forEach(e -> {
+            System.out.println("  " + e);
+            System.out.println("    Подзадачи:");
+            manager.getSubtasksByEpicId(e.getId()).forEach(s ->
+                    System.out.println("      " + s));
         });
 
+        System.out.println("\nВсе подзадачи:");
+        manager.getAllSubtasks().forEach(s -> System.out.println("  " + s));
+    }
+
+    private static void compareManagers(TaskManager m1, TaskManager m2) {
+        boolean tasksEqual = m1.getAllTasks().equals(m2.getAllTasks());
+        boolean epicsEqual = m1.getAllEpics().equals(m2.getAllEpics());
+        boolean subtasksEqual = m1.getAllSubtasks().equals(m2.getAllSubtasks());
+
+        System.out.println("Обычные задачи: " + (tasksEqual ? "совпадают" : "различаются"));
+        System.out.println("Эпики: " + (epicsEqual ? "совпадают" : "различаются"));
+        System.out.println("Подзадачи: " + (subtasksEqual ? "совпадают" : "различаются"));
+
+        if (tasksEqual && epicsEqual && subtasksEqual) {
+            System.out.println("Все данные успешно сохранены и загружены!");
+        }
     }
 }

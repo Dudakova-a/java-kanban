@@ -1,49 +1,72 @@
 package manager;
 
-import manager.InMemoryTaskManager;
-import manager.TaskManager;
-import manager.TimeOverlapException;
-import model.Epic;
-import model.Status;
-import model.Subtask;
-import model.Task;
+import model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class InMemoryTaskManagerTest {
-    private TaskManager manager;
+class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
+
+    @Override
+    protected InMemoryTaskManager createTaskManager() {
+        return new InMemoryTaskManager();
+    }
 
     @BeforeEach
-    void setUp() {
-        manager = new InMemoryTaskManager();
+    void additionalSetUp() {
+        // Дополнительная инициализация, если нужна
     }
 
     @Test
-    void shouldCreateTask() throws TimeOverlapException {
-        Task task = new Task("Task", "Test", Status.NEW,
-                LocalDateTime.of(2023, 1, 1, 10, 0), Duration.ofHours(1));
-        Task created = manager.createTask(task);
+    void shouldNotAddTaskWithoutTimeToPrioritizedList() {
+        Task task = new Task("Task without time", "Description", Status.NEW);
+        taskManager.createTask(task);
 
-        assertNotNull(created);
-        assertEquals(1, created.getId());
-        assertEquals(1, manager.getAllTasks().size());
+        assertTrue(taskManager.getPrioritizedTasks().isEmpty());
     }
 
     @Test
-    void shouldThrowWhenTasksOverlap() throws TimeOverlapException {
-        Task task1 = new Task("Task1", "Test1", Status.NEW,
-                LocalDateTime.of(2023, 1, 1, 10, 0), Duration.ofHours(2));
-        Task task2 = new Task("Task2", "Test2", Status.NEW,
-                LocalDateTime.of(2023, 1, 1, 11, 0), Duration.ofHours(1));
+    void shouldRemoveTaskFromPrioritizedListWhenDeleted() {
+        Task task = new Task("Task", "Description",
+                Status.NEW, Duration.ofHours(1),
+                LocalDateTime.now());
+        int taskId = taskManager.createTask(task);
+        taskManager.deleteTaskById(taskId);
 
-        manager.createTask(task1);
-        assertThrows(TimeOverlapException.class, () -> manager.createTask(task2));
+        assertTrue(taskManager.getPrioritizedTasks().isEmpty());
     }
 
+    @Test
+    void shouldUpdateTaskInPrioritizedList() {
+        LocalDateTime now = LocalDateTime.now();
+        Task task = new Task("Task", "Description",
+                Status.NEW, Duration.ofHours(1),
+                now);
+        int taskId = taskManager.createTask(task);
+
+        Task updated = new Task(taskId, "Updated", "Desc",
+                Status.IN_PROGRESS, Duration.ofHours(2),
+                now.plusHours(1));
+        taskManager.updateTask(updated);
+
+        Set<Task> prioritized = taskManager.getPrioritizedTasks();
+        assertEquals(1, prioritized.size());
+        assertEquals(now.plusHours(1), prioritized.iterator().next().getStartTime());
+    }
+
+    @Test
+    void shouldHandleEmptyEpicTime() {
+        Epic epic = new Epic("Epic", "Description");
+        int epicId = taskManager.createEpic(epic);
+
+        Epic savedEpic = taskManager.getEpicById(epicId);
+        assertNull(savedEpic.getStartTime());
+        assertNull(savedEpic.getDuration());
+        assertNull(savedEpic.getEndTime());
+    }
 }

@@ -7,11 +7,10 @@
       <sourceFolder url="file://$MODULE_DIR$/src/com/yandex/app/test" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/test" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/test" isTestSource="true" />
-      <excludeFolder url="file://$MODULE_DIR$/src/test/java" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library" exported="" scope="TEST">
+    <orderEntry type="module-library" scope="TEST">
       <library name="JUnit5.8.1">
         <CLASSES>
           <root url="jar://$MAVEN_REPOSITORY$/org/junit/jupiter/junit-jupiter/5.8.1/junit-jupiter-5.8.1.jar!/" />
@@ -34,6 +33,9 @@
         <SOURCES>
           <root url="file://$MODULE_DIR$/src" />
         </SOURCES>
+        <excluded>
+          <root url="file://$MODULE_DIR$/src" />
+        </excluded>
       </library>
     </orderEntry>
     <orderEntry type="module-library" scope="TEST">
@@ -62,5 +64,30 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES />
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../m1-api" />
+          <root url="file://$MODULE_DIR$/../m1-api/src" />
+        </SOURCES>
+        <excluded>
+          <root url="jar://$MODULE_DIR$/../m1-api/lib/gson-2.9.0.jar!/" />
+        </excluded>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="TEST">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/test" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="gson-2.9.0" level="project" />
   </component>
 </module>

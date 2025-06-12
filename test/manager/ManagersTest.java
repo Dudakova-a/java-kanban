@@ -11,7 +11,7 @@ class ManagersTest {
         TaskManager manager = Managers.getDefault();
         assertNotNull(manager, "Менеджер не должен быть null");
         // Проверяем что это TaskManager, а не конкретную реализацию
-        assertEquals(manager instanceof TaskManager, true, "Должен возвращаться объект, реализующий TaskManager");
+        assertTrue(manager instanceof TaskManager, "Должен возвращаться объект, реализующий TaskManager");
     }
 
     @Test
@@ -20,6 +20,6 @@ class ManagersTest {
         HistoryManager historyManager = Managers.getDefaultHistory();
         assertNotNull(historyManager, "Менеджер истории не должен быть null");
         // Проверяем что это HistoryManager, а не конкретную реализацию
-        assertInstanceOf(HistoryManager.class, historyManager, "Должен возвращаться объект, реализующий HistoryManager");
+        assertTrue(historyManager instanceof HistoryManager, "Должен возвращаться объект, реализующий HistoryManager");
     }
 }

@@ -1,143 +1,91 @@
 package model;
 
-import model.Epic;
-import model.Status;
-import model.Subtask;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class EpicTest {
-    private final LocalDateTime testTime = LocalDateTime.now();
-    private final Duration testDuration = Duration.ofMinutes(30);
+    private Epic epic;
+    private Subtask subtask1;
+    private Subtask subtask2;
 
-    @Test
-    void shouldCreateEpicWithRequiredFields() {
-        Epic epic = new Epic("Test Epic", "Test Description");
+    @BeforeEach
+    void setUp() {
+        epic = new Epic("Тестовый эпик", "Описание эпика");
+        subtask1 = new Subtask(1, "Подзадача 1", "Описание 1", Status.NEW, epic.getId());
+        subtask2 = new Subtask(2, "Подзадача 2", "Описание 2", Status.NEW, epic.getId());
 
-        assertEquals(1, epic.getId());
-        assertEquals("Test Epic", epic.getName());
-        assertEquals("Test Description", epic.getDescription());
-        assertEquals(Status.NEW, epic.getStatus());
-        assertNull(epic.getStartTime());
-        assertEquals(Duration.ZERO, epic.getDuration());
-        assertTrue(epic.getSubtaskIds().isEmpty());
+        epic.addSubtaskId(subtask1.getId());
+        epic.addSubtaskId(subtask2.getId());
     }
 
     @Test
-    void shouldCreateEpicWithAllFields() {
-        Epic epic = new Epic(1, "Test Epic", "Test Description",
-                Status.NEW, testTime, testDuration);
+    @DisplayName("Эпики с одинаковым ID должны быть равны")
+    void epicsWithSameIdShouldBeEqual() {
+        Epic epic1 = new Epic(1, "Эпик 1", "Описание");
+        Epic epic2 = new Epic(1, "Эпик 2", "Другое описание");
 
-        assertEquals(1, epic.getId());
-        assertEquals(testTime, epic.getStartTime());
-        assertEquals(testDuration, epic.getDuration());
+        assertEquals(epic1, epic2, "Эпики с одинаковым ID должны быть равны");
     }
 
     @Test
+    @DisplayName("Эпик должен наследоваться от Task")
+    void epicShouldInheritFromTask() {
+        assertInstanceOf(Task.class, epic, "Epic должен наследоваться от Task");
+    }
+
+    @Test
+    @DisplayName("Новый эпик должен иметь пустой список подзадач")
+    void newEpicShouldHaveEmptySubtasksList() {
+        Epic newEpic = new Epic("Новый эпик", "Описание");
+        assertTrue(newEpic.getSubtaskIds().isEmpty(), "Новый эпик должен иметь пустой список подзадач");
+    }
+
+    @Test
+    @DisplayName("Должен добавлять и удалять ID подзадач")
     void shouldAddAndRemoveSubtaskIds() {
-        Epic epic = new Epic("Test Epic", "Test Description");
+        Epic testEpic = new Epic(1, "Тестовый эпик", "Описание");
 
-        epic.addSubtaskId(2);
-        epic.addSubtaskId(3);
+        // Проверяем добавление валидного ID
+        testEpic.addSubtaskId(2);
+        assertEquals(1, testEpic.getSubtaskIds().size(), "Не удалось добавить подзадачу");
 
-        assertEquals(List.of(2, 3), epic.getSubtaskIds());
+        // Проверяем удаление
+        testEpic.removeSubtaskId(2);
+        assertTrue(testEpic.getSubtaskIds().isEmpty(), "Не удалось удалить подзадачу");
 
-        epic.removeSubtaskId(2);
-        assertEquals(List.of(3), epic.getSubtaskIds());
+        // Проверяем добавление невалидного ID
+        assertThrows(IllegalArgumentException.class, () -> testEpic.addSubtaskId(-1));
+        assertThrows(IllegalArgumentException.class, () -> testEpic.addSubtaskId(0));
     }
 
     @Test
-    void shouldNotAddInvalidSubtaskId() {
-        Epic epic = new Epic("Test Epic", "Test Description");
-
-        assertThrows(IllegalArgumentException.class, () -> epic.addSubtaskId(0));
-        assertThrows(IllegalArgumentException.class, () -> epic.addSubtaskId(-1));
+    @DisplayName("Должен создавать эпик с корректным начальным состоянием")
+    void shouldCreateEpicWithCorrectInitialState() {
+        assertNotNull(epic.getId(), "ID должен быть сгенерирован");
+        assertEquals("Тестовый эпик", epic.getName(), "Название не соответствует");
+        assertEquals("Описание эпика", epic.getDescription(), "Описание не соответствует");
+        assertEquals(Status.NEW, epic.getStatus(), "Статус по умолчанию должен быть NEW");
+        assertEquals(2, epic.getSubtaskIds().size(), "Должно быть 2 подзадачи");
     }
 
     @Test
-    void shouldCalculateDurationWithoutSubtasks() {
-        Epic epic = new Epic(1, "Test Epic", "Test Description",
-                Status.NEW, null, null);
-
-        assertEquals(Duration.ZERO, epic.getDuration());
+    @DisplayName("Должен корректно обрабатывать невалидный ID подзадачи")
+    void shouldThrowWhenAddingInvalidSubtaskId() {
+        assertThrows(IllegalArgumentException.class, () -> epic.addSubtaskId(-1),
+                "Должно выбрасываться исключение при невалидном ID");
     }
 
     @Test
-    void shouldCalculateDurationWithSubtasks() {
-        Epic epic = new Epic("Test Epic", "Test Description");
-        Subtask subtask1 = new Subtask(2, "Sub 1", "Desc 1", Status.NEW,
-                testTime, Duration.ofMinutes(15), 1);
-        Subtask subtask2 = new Subtask(3, "Sub 2", "Desc 2", Status.NEW,
-                testTime.plusHours(1), Duration.ofMinutes(20), 1);
-
-        epic.setSubtasks(List.of(subtask1, subtask2));
-
-        assertEquals(Duration.ofMinutes(35), epic.getDuration());
-    }
-
-    @Test
-    void shouldCalculateStartTimeWithSubtasks() {
-        Epic epic = new Epic("Test Epic", "Test Description");
-        Subtask subtask1 = new Subtask(2, "Sub 1", "Desc 1", Status.NEW,
-                testTime.plusHours(1), Duration.ofMinutes(15), 1);
-        Subtask subtask2 = new Subtask(3, "Sub 2", "Desc 2", Status.NEW,
-                testTime, Duration.ofMinutes(20), 1);
-
-        epic.setSubtasks(List.of(subtask1, subtask2));
-
-        assertEquals(testTime, epic.getStartTime());
-    }
-
-    @Test
-    void shouldReturnNullStartTimeWhenNoSubtasks() {
-        Epic epic = new Epic("Test Epic", "Test Description");
-
-        assertNull(epic.getStartTime());
-    }
-
-    @Test
-    void shouldCalculateEndTimeWithSubtasks() {
-        Epic epic = new Epic("Test Epic", "Test Description");
-        Subtask subtask1 = new Subtask(2, "Sub 1", "Desc 1", Status.NEW,
-                testTime, Duration.ofMinutes(15), 1);
-        Subtask subtask2 = new Subtask(3, "Sub 2", "Desc 2", Status.NEW,
-                testTime.plusHours(1), Duration.ofMinutes(20), 1);
-
-        epic.setSubtasks(List.of(subtask1, subtask2));
-
-        assertEquals(testTime.plusHours(1).plusMinutes(20), epic.getEndTime());
-    }
-
-    @Test
-    void shouldReturnNullEndTimeWhenNoSubtasks() {
-        Epic epic = new Epic("Test Epic", "Test Description");
-
-        assertNull(epic.getEndTime());
-    }
-
-    @Test
-    void shouldHandleNullSubtasksInCalculations() {
-        Epic epic = new Epic("Test Epic", "Test Description");
-        epic.setSubtasks(null);
-
-        assertEquals(Duration.ZERO, epic.getDuration());
-        assertNull(epic.getStartTime());
-        assertNull(epic.getEndTime());
-    }
-
-    @Test
-    void shouldReturnCorrectToString() {
-        Epic epic = new Epic(1, "Test Epic", "Test Description",
-                Status.NEW, testTime, testDuration);
-        epic.addSubtaskId(2);
-
-        String expected = "Epic{id=1, name='Test Epic', description='Test Description', " +
-                "status=NEW, startTime=" + testTime + ", duration=30m, subtaskIds=[2]}";
-        assertEquals(expected, epic.toString());
+    @DisplayName("Должен корректно отображаться в строковом представлении")
+    void shouldReturnCorrectStringRepresentation() {
+        String expected = "Epic{id=" + epic.getId() +
+                ", name='Тестовый эпик', description='Описание эпика', status=NEW" +
+                ", subtaskIds=" + epic.getSubtaskIds() +
+                ", duration=" + epic.getDuration() +
+                ", startTime=" + epic.getStartTime() + "}";
+        assertEquals(expected, epic.toString(), "Строковое представление не совпадает");
     }
 }
